@@ -1,5 +1,7 @@
 package com.agmcleod.twentyfortyeight;
 
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -44,7 +46,17 @@ public class Tile {
         }
     }
 
-    public void setYByRow(int r) {
-        this.pos.y = r * SIZE + ((r + 1) * Game.TILE_SPACING) + Game.yOffset;
+    public void setXByColumn(int c, TweenManager tweenManager) {
+        int x = c * SIZE + ((c + 1) * Game.TILE_SPACING);
+        Tween.to(this, TileAccessor.POSITION_X, 0.4f).target(x).start(tweenManager);
+    }
+
+    public void setYByRow(int r, TweenManager tweenManager) {
+        int y = r * SIZE + ((r + 1) * Game.TILE_SPACING) + Game.yOffset;
+        Tween.to(this, TileAccessor.POSITION_Y, 0.4f).target(y).start(tweenManager);
+    }
+
+    public void update(float delta) {
+
     }
 }

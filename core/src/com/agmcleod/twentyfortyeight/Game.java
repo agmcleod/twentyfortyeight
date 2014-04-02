@@ -1,5 +1,7 @@
 package com.agmcleod.twentyfortyeight;
 
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenManager;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -21,6 +23,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     private boolean moving;
     private Texture numbersTexture;
     private ShapeRenderer shapeRenderer;
+    private TweenManager tweenManager;
 
     enum Direction {
         UP, DOWN, LEFT, RIGHT
@@ -31,6 +34,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         batch = new SpriteBatch();
         gridSpaces = new GridSpace[4][4];
         moving = false;
+        tweenManager = new TweenManager();
+        Tween.registerAccessor(Tile.class, new TileAccessor());
         yOffset = Gdx.graphics.getHeight() - (Tile.SIZE * 4 + TILE_SPACING * 5);
         for(int c = 0; c < 4; c++) {
             for(int r = 0; r < 4; r++) {
@@ -74,6 +79,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public void render () {
+        update();
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -159,10 +165,19 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                 }
                 break;
             case Input.Keys.DOWN:
+                if(canMoveInDirection(Direction.DOWN)) {
+                    shiftTilesDown();
+                }
                 break;
             case Input.Keys.LEFT:
+                if(canMoveInDirection(Direction.LEFT)) {
+                    shiftTilesLeft();
+                }
                 break;
             case Input.Keys.RIGHT:
+                if(canMoveInDirection(Direction.LEFT)) {
+                    shiftTilesRight();
+                }
                 break;
         }
         return false;
@@ -203,6 +218,84 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         return false;
     }
 
+    public void shiftTilesDown() {
+        moving = true;
+        for(int c = 0; c < gridSpaces.length; c++) {
+            for(int r = 0; r < gridSpaces[c].length; r++) {
+                if(!gridSpaces[c][r].empty) {
+                    int count = 0;
+                    for(int belowRow = 0; belowRow < r; belowRow++) {
+                        if(gridSpaces[c][belowRow].empty) {
+                            count++;
+                        }
+                    }
+
+                    if(count > 0) {
+                        Tile tile = gridSpaces[c][r].getTile();
+                        tile.setYByRow(r - count, tweenManager);
+                        gridSpaces[c][r].setTile(null);
+                        gridSpaces[c][r].empty = true;
+
+                        gridSpaces[c][r - count].setTile(tile);
+                        gridSpaces[c][r - count].empty = false;
+                    }
+                }
+            }
+        }
+    }
+
+    public void shiftTilesLeft() {
+        moving = true;
+        for(int r = 0; r < gridSpaces[0].length; r++) {
+            for(int c = 0; c < gridSpaces.length; c++) {
+                if(!gridSpaces[c][r].empty) {
+                    int count = 0;
+                    for(int leftRow = 0; leftRow < c; leftRow++) {
+                        if(gridSpaces[leftRow][r].empty) {
+                            count++;
+                        }
+                    }
+
+                    if(count > 0) {
+                        Tile tile = gridSpaces[c][r].getTile();
+                        tile.setXByColumn(c - count, tweenManager);
+                        gridSpaces[c][r].setTile(null);
+                        gridSpaces[c][r].empty = true;
+
+                        gridSpaces[c - count][r].setTile(tile);
+                        gridSpaces[c - count][r].empty = false;
+                    }
+                }
+            }
+        }
+    }
+
+    public void shiftTilesRight() {
+        moving = true;
+        for(int r = 0; r < gridSpaces[0].length; r++) {
+            for(int c = gridSpaces.length - 1; c >= 0; c--) {
+                if(!gridSpaces[c][r].empty) {
+                    int count = 0;
+                    for(int rightRow = gridSpaces.length - 1; rightRow > c; rightRow--) {
+                        if(gridSpaces[rightRow][r].empty) {
+                            count++;
+                        }
+                    }
+
+                    if(count > 0) {
+                        Tile tile = gridSpaces[c][r].getTile();
+                        tile.setXByColumn(c + count, tweenManager);
+                        gridSpaces[c][r].setTile(null);
+                        gridSpaces[c][r].empty = true;
+
+                        gridSpaces[c + count][r].setTile(tile);
+                        gridSpaces[c + count][r].empty = false;
+                    }
+                }
+            }
+        }
+    }
+
     public void shiftTilesUp() {
         moving = true;
         for(int c = 0; c < gridSpaces.length; c++) {
@@ -218,7 +311,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
 
                     if(count > 0) {
                         Tile tile = gridSpaces[c][r].getTile();
-                        tile.setYByRow(r + count);
+                        tile.setYByRow(r + count, tweenManager);
                         gridSpaces[c][r].setTile(null);
                         gridSpaces[c][r].empty = true;
 
@@ -228,6 +321,10 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                 }
             }
         }
+    }
+
+    public void update() {
+        tweenManager.update(Gdx.graphics.getDeltaTime());
     }
 
 }
