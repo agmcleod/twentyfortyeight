@@ -22,6 +22,8 @@
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="gdx-1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="tween-engine-api-sources" level="project" />
+    <orderEntry type="library" exported="" name="tween-engine-api" level="project" />
   </component>
 </module>
 
