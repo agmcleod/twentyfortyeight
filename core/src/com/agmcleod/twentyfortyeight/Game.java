@@ -1,6 +1,8 @@
 package com.agmcleod.twentyfortyeight;
 
+import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenCallback;
 import aurelienribon.tweenengine.TweenManager;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -21,6 +23,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     private SpriteBatch batch;
     private GridSpace[][] gridSpaces;
     private boolean moving;
+    private TweenCallback moveCallback;
     private Texture numbersTexture;
     private ShapeRenderer shapeRenderer;
     private TweenManager tweenManager;
@@ -55,6 +58,13 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         shapeRenderer = new ShapeRenderer();
         assignTile();
         assignTile();
+
+        moveCallback = new TweenCallback() {
+            @Override
+            public void onEvent(int type, BaseTween<?> source) {
+                moving = false;
+            }
+        };
     }
 
     public void assignTile() {
@@ -65,7 +75,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
             assignTile();
         }
         else {
-            gs.setTile(new Tile(new Vector2(gs.getPos().x, gs.getPos().y), numbersTexture));
+            gs.setTile(new Tile(new Vector2(gs.getPos().x, gs.getPos().y), numbersTexture, this));
             gs.empty = false;
         }
     }
@@ -118,6 +128,9 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public boolean canMoveInDirection(Direction direction) {
+        if(moving) {
+            return false;
+        }
         switch(direction) {
             case UP:
                 boolean canMoveUp = false;
@@ -154,6 +167,10 @@ public class Game extends ApplicationAdapter implements InputProcessor {
             default:
                 return false;
         }
+    }
+
+    public TweenCallback getMoveCallback() {
+        return moveCallback;
     }
 
     @Override
@@ -219,7 +236,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesDown() {
-        moving = true;
         for(int c = 0; c < gridSpaces.length; c++) {
             for(int r = 0; r < gridSpaces[c].length; r++) {
                 if(!gridSpaces[c][r].empty) {
@@ -231,6 +247,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
+                        moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
                         tile.setYByRow(r - count, tweenManager);
                         gridSpaces[c][r].setTile(null);
@@ -245,7 +262,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesLeft() {
-        moving = true;
         for(int r = 0; r < gridSpaces[0].length; r++) {
             for(int c = 0; c < gridSpaces.length; c++) {
                 if(!gridSpaces[c][r].empty) {
@@ -257,6 +273,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
+                        moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
                         tile.setXByColumn(c - count, tweenManager);
                         gridSpaces[c][r].setTile(null);
@@ -271,7 +288,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesRight() {
-        moving = true;
         for(int r = 0; r < gridSpaces[0].length; r++) {
             for(int c = gridSpaces.length - 1; c >= 0; c--) {
                 if(!gridSpaces[c][r].empty) {
@@ -283,6 +299,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
+                        moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
                         tile.setXByColumn(c + count, tweenManager);
                         gridSpaces[c][r].setTile(null);
@@ -297,7 +314,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesUp() {
-        moving = true;
         for(int c = 0; c < gridSpaces.length; c++) {
             int cLen = gridSpaces[c].length - 1;
             for(int r = cLen; r >= 0; r--) {
@@ -310,6 +326,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
+                        moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
                         tile.setYByRow(r + count, tweenManager);
                         gridSpaces[c][r].setTile(null);

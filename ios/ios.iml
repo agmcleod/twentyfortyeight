@@ -22,11 +22,11 @@
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="core" exported="" />
-    <orderEntry type="library" exported="" name="robovm-rt-0.0.10" level="project" />
-    <orderEntry type="library" exported="" name="robovm-cocoatouch-0.0.10" level="project" />
     <orderEntry type="library" exported="" name="gdx-backend-robovm-1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" exported="" name="robovm-objc-0.0.10" level="project" />
+    <orderEntry type="library" exported="" name="robovm-cocoatouch-0.0.11" level="project" />
+    <orderEntry type="library" exported="" name="robovm-rt-0.0.11" level="project" />
     <orderEntry type="library" exported="" name="gdx-1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="robovm-objc-0.0.11" level="project" />
   </component>
 </module>
 
