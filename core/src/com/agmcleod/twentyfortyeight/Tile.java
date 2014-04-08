@@ -50,14 +50,14 @@ public class Tile {
         }
     }
 
-    public void setXByColumn(int c, TweenManager tweenManager) {
+    public void setXByColumn(int c, TweenManager tweenManager, TweenCallback callback) {
         int x = c * SIZE + ((c + 1) * Game.TILE_SPACING);
-        Tween.to(this, TileAccessor.POSITION_X, 0.1f).target(x).start(tweenManager).setCallback(game.getMoveCallback());
+        Tween.to(this, TileAccessor.POSITION_X, 0.1f).target(x).start(tweenManager).setCallback(callback);
     }
 
-    public void setYByRow(int r, TweenManager tweenManager) {
+    public void setYByRow(int r, TweenManager tweenManager, TweenCallback callback) {
         int y = r * SIZE + ((r + 1) * Game.TILE_SPACING) + Game.yOffset;
-        Tween.to(this, TileAccessor.POSITION_Y, 0.1f).target(y).start(tweenManager).setCallback(game.getMoveCallback());
+        Tween.to(this, TileAccessor.POSITION_Y, 0.1f).target(y).start(tweenManager).setCallback(callback);
     }
 
     public void update(float delta) {

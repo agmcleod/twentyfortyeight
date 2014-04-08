@@ -22,6 +22,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
 
     private SpriteBatch batch;
     private GridSpace[][] gridSpaces;
+    private int moveAmount = 0;
     private boolean moving;
     private TweenCallback moveCallback;
     private Texture numbersTexture;
@@ -62,7 +63,11 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         moveCallback = new TweenCallback() {
             @Override
             public void onEvent(int type, BaseTween<?> source) {
-                moving = false;
+                moveAmount--;
+                if(moveAmount <= 0) {
+                    moving = false;
+                    assignTile();
+                }
             }
         };
     }
@@ -127,48 +132,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         return emptyCount > 0;
     }
 
-    public boolean canMoveInDirection(Direction direction) {
-        if(moving) {
-            return false;
-        }
-        switch(direction) {
-            case UP:
-                boolean canMoveUp = false;
-                for(int c = 0; c < gridSpaces.length; c++) {
-                    if(gridSpaces[c][3].empty) {
-                        canMoveUp = true;
-                    }
-                }
-                return canMoveUp;
-            case DOWN:
-                boolean canMoveDown = false;
-                for(int c = 0; c < gridSpaces.length; c++) {
-                    if(gridSpaces[c][0].empty) {
-                        canMoveDown = true;
-                    }
-                }
-                return canMoveDown;
-            case LEFT:
-                boolean canMoveLeft = false;
-                for(int r = 0; r < gridSpaces[0].length; r++) {
-                    if(gridSpaces[0][r].empty) {
-                        canMoveLeft = true;
-                    }
-                }
-                return canMoveLeft;
-            case RIGHT:
-                boolean canMoveRight = false;
-                for(int r = 0; r < gridSpaces[3].length; r++) {
-                    if(gridSpaces[3][r].empty) {
-                        canMoveRight = true;
-                    }
-                }
-                return canMoveRight;
-            default:
-                return false;
-        }
-    }
-
     public TweenCallback getMoveCallback() {
         return moveCallback;
     }
@@ -177,22 +140,22 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     public boolean keyDown(int keycode) {
         switch(keycode) {
             case Input.Keys.UP:
-                if(canMoveInDirection(Direction.UP)) {
+                if(!moving) {
                     shiftTilesUp();
                 }
                 break;
             case Input.Keys.DOWN:
-                if(canMoveInDirection(Direction.DOWN)) {
+                if(!moving) {
                     shiftTilesDown();
                 }
                 break;
             case Input.Keys.LEFT:
-                if(canMoveInDirection(Direction.LEFT)) {
+                if(!moving) {
                     shiftTilesLeft();
                 }
                 break;
             case Input.Keys.RIGHT:
-                if(canMoveInDirection(Direction.LEFT)) {
+                if(!moving) {
                     shiftTilesRight();
                 }
                 break;
@@ -236,6 +199,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesDown() {
+        moveAmount = 0;
         for(int c = 0; c < gridSpaces.length; c++) {
             for(int r = 0; r < gridSpaces[c].length; r++) {
                 if(!gridSpaces[c][r].empty) {
@@ -249,7 +213,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     if(count > 0) {
                         moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
-                        tile.setYByRow(r - count, tweenManager);
+                        tile.setYByRow(r - count, tweenManager, moveCallback);
+                        moveAmount++;
                         gridSpaces[c][r].setTile(null);
                         gridSpaces[c][r].empty = true;
 
@@ -262,6 +227,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesLeft() {
+        moveAmount = 0;
         for(int r = 0; r < gridSpaces[0].length; r++) {
             for(int c = 0; c < gridSpaces.length; c++) {
                 if(!gridSpaces[c][r].empty) {
@@ -275,7 +241,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     if(count > 0) {
                         moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
-                        tile.setXByColumn(c - count, tweenManager);
+                        tile.setXByColumn(c - count, tweenManager, moveCallback);
+                        moveAmount++;
                         gridSpaces[c][r].setTile(null);
                         gridSpaces[c][r].empty = true;
 
@@ -288,6 +255,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesRight() {
+        moveAmount = 0;
         for(int r = 0; r < gridSpaces[0].length; r++) {
             for(int c = gridSpaces.length - 1; c >= 0; c--) {
                 if(!gridSpaces[c][r].empty) {
@@ -301,7 +269,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     if(count > 0) {
                         moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
-                        tile.setXByColumn(c + count, tweenManager);
+                        tile.setXByColumn(c + count, tweenManager, moveCallback);
+                        moveAmount++;
                         gridSpaces[c][r].setTile(null);
                         gridSpaces[c][r].empty = true;
 
@@ -314,6 +283,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     public void shiftTilesUp() {
+        moveAmount = 0;
         for(int c = 0; c < gridSpaces.length; c++) {
             int cLen = gridSpaces[c].length - 1;
             for(int r = cLen; r >= 0; r--) {
@@ -328,7 +298,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     if(count > 0) {
                         moving = true;
                         Tile tile = gridSpaces[c][r].getTile();
-                        tile.setYByRow(r + count, tweenManager);
+                        tile.setYByRow(r + count, tweenManager, moveCallback);
+                        moveAmount++;
                         gridSpaces[c][r].setTile(null);
                         gridSpaces[c][r].empty = true;
 
