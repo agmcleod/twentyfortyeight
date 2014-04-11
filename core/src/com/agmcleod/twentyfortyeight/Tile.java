@@ -34,6 +34,10 @@ public class Tile {
         return this.pos;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     public void render(SpriteBatch batch) {
         batch.draw(texture, this.pos.x, this.pos.y, (int) this.textureOffset.x, (int) this.textureOffset.y, SIZE, SIZE);
     }

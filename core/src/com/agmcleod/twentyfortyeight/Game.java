@@ -18,8 +18,8 @@ import com.badlogic.gdx.utils.Array;
 
 public class Game extends ApplicationAdapter implements InputProcessor {
     static final int TILE_SPACING = 16;
-    static int yOffset;
 
+    static int yOffset;
     private SpriteBatch batch;
     private GridSpace[][] gridSpaces;
     private int moveAmount = 0;
@@ -27,10 +27,33 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     private TweenCallback moveCallback;
     private Texture numbersTexture;
     private ShapeRenderer shapeRenderer;
+
     private TweenManager tweenManager;
 
-    enum Direction {
-        UP, DOWN, LEFT, RIGHT
+    public void assignTile() {
+        int c = MathUtils.random(0, 3);
+        int r = MathUtils.random(0, 3);
+        GridSpace gs = gridSpaces[c][r];
+        if(!gs.empty) {
+            assignTile();
+        }
+        else {
+            gs.setTile(new Tile(new Vector2(gs.getPos().x, gs.getPos().y), numbersTexture, this));
+            gs.empty = false;
+        }
+    }
+
+    public boolean canMoveAtAll() {
+        int emptyCount = 0;
+        for(int c = 0; c < gridSpaces.length; c++) {
+            for(int r = 0; r < gridSpaces[c].length; r++) {
+                if(gridSpaces[c][r].empty) {
+                    emptyCount++;
+                }
+            }
+        }
+
+        return emptyCount > 0;
     }
 
     @Override
@@ -72,64 +95,11 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         };
     }
 
-    public void assignTile() {
-        int c = MathUtils.random(0, 3);
-        int r = MathUtils.random(0, 3);
-        GridSpace gs = gridSpaces[c][r];
-        if(!gs.empty) {
-            assignTile();
-        }
-        else {
-            gs.setTile(new Tile(new Vector2(gs.getPos().x, gs.getPos().y), numbersTexture, this));
-            gs.empty = false;
-        }
-    }
-
     @Override
     public void dispose() {
         batch.dispose();
         numbersTexture.dispose();
         shapeRenderer.dispose();
-    }
-
-    @Override
-    public void render () {
-        update();
-        Gdx.gl.glClearColor(1, 1, 1, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0.95f, 0.95f, 0.95f, 1f);
-        for(int c = 0; c < gridSpaces.length; c++) {
-            for(int r = 0; r < gridSpaces[c].length; r++) {
-                GridSpace gs = gridSpaces[c][r];
-                shapeRenderer.rect(gs.getPos().x, gs.getPos().y, Tile.SIZE, Tile.SIZE);
-            }
-        }
-        shapeRenderer.end();
-
-        batch.begin();
-        for(int c = 0; c < gridSpaces.length; c++) {
-            for(int r = 0; r < gridSpaces[c].length; r++) {
-                GridSpace gs = gridSpaces[c][r];
-                if(!gs.empty && gs.getTile() != null) {
-                    gs.getTile().render(batch);
-                }
-            }
-        }
-        batch.end();
-    }
-
-    public boolean canMoveAtAll() {
-        int emptyCount = 0;
-        for(int c = 0; c < gridSpaces.length; c++) {
-            for(int r = 0; r < gridSpaces[c].length; r++) {
-                if(gridSpaces[c][r].empty) {
-                    emptyCount++;
-                }
-            }
-        }
-
-        return emptyCount > 0;
     }
 
     public TweenCallback getMoveCallback() {
@@ -164,27 +134,12 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     @Override
-    public boolean keyUp(int keycode) {
-        return false;
-    }
-
-    @Override
     public boolean keyTyped(char character) {
         return false;
     }
 
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
+    public boolean keyUp(int keycode) {
         return false;
     }
 
@@ -194,8 +149,48 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     }
 
     @Override
+    public void render () {
+        update();
+        Gdx.gl.glClearColor(1, 1, 1, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(0.95f, 0.95f, 0.95f, 1f);
+        for(int c = 0; c < gridSpaces.length; c++) {
+            for(int r = 0; r < gridSpaces[c].length; r++) {
+                GridSpace gs = gridSpaces[c][r];
+                shapeRenderer.rect(gs.getPos().x, gs.getPos().y, Tile.SIZE, Tile.SIZE);
+            }
+        }
+        shapeRenderer.end();
+
+        batch.begin();
+        for(int c = 0; c < gridSpaces.length; c++) {
+            for(int r = 0; r < gridSpaces[c].length; r++) {
+                GridSpace gs = gridSpaces[c][r];
+                if(!gs.empty && gs.getTile() != null) {
+                    gs.getTile().render(batch);
+                }
+            }
+        }
+        batch.end();
+    }
+
+    @Override
     public boolean scrolled(int amount) {
         return false;
+    }
+    
+    public void shiftTile(int c, int r, int tc, int tr) {
+        moving = true;
+        Tile tile = gridSpaces[c][r].getTile();
+        tile.setYByRow(tr, tweenManager, moveCallback);
+        moveAmount++;
+        gridSpaces[c][r].setTile(null);
+        gridSpaces[c][r].empty = true;
+
+        gridSpaces[tc][tr].setTile(tile);
+        gridSpaces[tc][tr].empty = false;
+        tryToCombine(c, r, tc, tr);
     }
 
     public void shiftTilesDown() {
@@ -211,15 +206,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
-                        moving = true;
-                        Tile tile = gridSpaces[c][r].getTile();
-                        tile.setYByRow(r - count, tweenManager, moveCallback);
-                        moveAmount++;
-                        gridSpaces[c][r].setTile(null);
-                        gridSpaces[c][r].empty = true;
-
-                        gridSpaces[c][r - count].setTile(tile);
-                        gridSpaces[c][r - count].empty = false;
+                        shiftTile(c, r, c, r - count);
+                        tryToCombine(c, r - count, c, r - count - 1);
                     }
                 }
             }
@@ -248,6 +236,9 @@ public class Game extends ApplicationAdapter implements InputProcessor {
 
                         gridSpaces[c - count][r].setTile(tile);
                         gridSpaces[c - count][r].empty = false;
+
+                        shiftTile(c, r, c - count, r);
+                        tryToCombine(c - count, r, c - count - 1, r);
                     }
                 }
             }
@@ -267,15 +258,8 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
-                        moving = true;
-                        Tile tile = gridSpaces[c][r].getTile();
-                        tile.setXByColumn(c + count, tweenManager, moveCallback);
-                        moveAmount++;
-                        gridSpaces[c][r].setTile(null);
-                        gridSpaces[c][r].empty = true;
-
-                        gridSpaces[c + count][r].setTile(tile);
-                        gridSpaces[c + count][r].empty = false;
+                        shiftTile(c, r, c + count, r);
+                        tryToCombine(c + count, r, c + count + 1, r);
                     }
                 }
             }
@@ -296,17 +280,37 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
-                        moving = true;
-                        Tile tile = gridSpaces[c][r].getTile();
-                        tile.setYByRow(r + count, tweenManager, moveCallback);
-                        moveAmount++;
-                        gridSpaces[c][r].setTile(null);
-                        gridSpaces[c][r].empty = true;
-
-                        gridSpaces[c][r + count].setTile(tile);
-                        gridSpaces[c][r + count].empty = false;
+                        shiftTile(c, r, c, r + count);
+                        tryToCombine(c, r + count, c, r + count + 1);
                     }
                 }
+            }
+        }
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    public void tryToCombine(int column, int row, int targetColumn, int targetRow) {
+        if(targetColumn > -1 && targetRow > -1 && gridSpaces.length > targetColumn && gridSpaces[targetColumn].length > targetRow) {
+            if(gridSpaces[targetColumn][targetRow].getTileValue() == gridSpaces[column][row].getTileValue()) {
+                GridSpace oldSpace = gridSpaces[column][row];
+                GridSpace targetSpace = gridSpaces[targetColumn][targetRow];
+                oldSpace.setTile(null);
+                oldSpace.empty = true;
+                targetSpace.getTile().setValue(targetSpace.getTileValue() + 1);
             }
         }
     }

@@ -22,6 +22,15 @@ public class GridSpace {
     public Tile getTile() {
         return tile;
     }
+    
+    public int getTileValue() {
+        if(this.tile == null) {
+            return -1;
+        }
+        else {
+            return this.tile.getValue();
+        }
+    }
 
     public void setTile(Tile tile) {
         this.tile = tile;
