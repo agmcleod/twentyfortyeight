@@ -183,14 +183,19 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     public void shiftTile(int c, int r, int tc, int tr) {
         moving = true;
         Tile tile = gridSpaces[c][r].getTile();
-        tile.setYByRow(tr, tweenManager, moveCallback);
+        if(tc != c) {
+            tile.setXByColumn(tc, tweenManager, moveCallback);
+        }
+        else if(tr != r) {
+            tile.setYByRow(tr, tweenManager, moveCallback);
+        }
+
         moveAmount++;
         gridSpaces[c][r].setTile(null);
         gridSpaces[c][r].empty = true;
 
         gridSpaces[tc][tr].setTile(tile);
         gridSpaces[tc][tr].empty = false;
-        tryToCombine(c, r, tc, tr);
     }
 
     public void shiftTilesDown() {
@@ -227,16 +232,6 @@ public class Game extends ApplicationAdapter implements InputProcessor {
                     }
 
                     if(count > 0) {
-                        moving = true;
-                        Tile tile = gridSpaces[c][r].getTile();
-                        tile.setXByColumn(c - count, tweenManager, moveCallback);
-                        moveAmount++;
-                        gridSpaces[c][r].setTile(null);
-                        gridSpaces[c][r].empty = true;
-
-                        gridSpaces[c - count][r].setTile(tile);
-                        gridSpaces[c - count][r].empty = false;
-
                         shiftTile(c, r, c - count, r);
                         tryToCombine(c - count, r, c - count - 1, r);
                     }
