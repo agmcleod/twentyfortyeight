@@ -40,6 +40,33 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         else {
             gs.setTile(new Tile(new Vector2(gs.getPos().x, gs.getPos().y), numbersTexture, this));
             gs.empty = false;
+            if(!canMoveAtAll()) {
+                boolean canMove = false;
+
+                // check column for a possible combination
+                for(int col = 0; col < gridSpaces.length; col++) {
+                    for(int row = 0; row < gridSpaces[col].length; row++) {
+                        if(gridSpaces[col].length < row + 1 && gridSpaces[col][row].getTileValue() == gridSpaces[col][row + 1].getTileValue()) {
+                            canMove = true;
+                            break;
+                        }
+                    }
+                }
+
+                // check row for a possible combination
+                for(int row = 0; row < gridSpaces[0].length; row++) {
+                    for(int col = 0; col < gridSpaces.length; col++) {
+                        if(gridSpaces.length < col + 1 && gridSpaces[col][row].getTileValue() == gridSpaces[col + 1][row].getTileValue()) {
+                            canMove = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if(!canMove) {
+                    reinitializeGame();
+                }
+            }
         }
     }
 
@@ -54,6 +81,39 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         }
 
         return emptyCount > 0;
+    }
+
+    public void combineTilesDown() {
+        for(int c = 0; c < gridSpaces.length; c++) {
+            for(int r = 0; r < gridSpaces[c].length; r++) {
+                tryToCombine(c, r, c, r + 1);
+            }
+        }
+    }
+
+    public void combineTilesLeft() {
+        for(int r = 0; r < gridSpaces[0].length; r++) {
+            for(int c = 0; c < gridSpaces.length; c++) {
+                tryToCombine(c, r, c + 1, r);
+            }
+        }
+    }
+
+    public void combineTilesRight() {
+        for(int r = 0; r < gridSpaces[0].length; r++) {
+            for(int c = gridSpaces.length - 1; c >= 0; c--) {
+                tryToCombine(c, r, c - 1, r);
+            }
+        }
+    }
+
+    public void combineTilesUp() {
+        for(int c = 0; c < gridSpaces.length; c++) {
+            int cLen = gridSpaces[c].length - 1;
+            for(int r = cLen; r >= 0; r--) {
+                tryToCombine(c, r, c, r - 1);
+            }
+        }
     }
 
     @Override
@@ -111,21 +171,25 @@ public class Game extends ApplicationAdapter implements InputProcessor {
         switch(keycode) {
             case Input.Keys.UP:
                 if(!moving) {
+                    combineTilesUp();
                     shiftTilesUp();
                 }
                 break;
             case Input.Keys.DOWN:
                 if(!moving) {
+                    combineTilesDown();
                     shiftTilesDown();
                 }
                 break;
             case Input.Keys.LEFT:
                 if(!moving) {
+                    combineTilesLeft();
                     shiftTilesLeft();
                 }
                 break;
             case Input.Keys.RIGHT:
                 if(!moving) {
+                    combineTilesRight();
                     shiftTilesRight();
                 }
                 break;
@@ -146,6 +210,18 @@ public class Game extends ApplicationAdapter implements InputProcessor {
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         return false;
+    }
+
+    public void reinitializeGame() {
+        moving = false;
+        for(int col = 0; col < gridSpaces.length; col++) {
+            for(int row = 0; row < gridSpaces[col].length; row++) {
+                gridSpaces[col][row].empty = true;
+                gridSpaces[col][row].setTile(null);
+            }
+        }
+        assignTile();
+        assignTile();
     }
 
     @Override
@@ -300,7 +376,7 @@ public class Game extends ApplicationAdapter implements InputProcessor {
 
     public void tryToCombine(int column, int row, int targetColumn, int targetRow) {
         if(targetColumn > -1 && targetRow > -1 && gridSpaces.length > targetColumn && gridSpaces[targetColumn].length > targetRow) {
-            if(gridSpaces[targetColumn][targetRow].getTileValue() == gridSpaces[column][row].getTileValue()) {
+            if(gridSpaces[targetColumn][targetRow].getTileValue() != -1 && gridSpaces[targetColumn][targetRow].getTileValue() == gridSpaces[column][row].getTileValue()) {
                 GridSpace oldSpace = gridSpaces[column][row];
                 GridSpace targetSpace = gridSpaces[targetColumn][targetRow];
                 oldSpace.setTile(null);
